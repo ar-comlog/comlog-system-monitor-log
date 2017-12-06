@@ -44,6 +44,7 @@ function ComlogLogWatcher(options) {
 
 		try {
 			_fw = new Tail(options.path());
+			if (_self.debug) console.info("Starting Logfilter for '"+options.path()+"'");
 			_fw.on("line", function(data) {
 
 				// down
