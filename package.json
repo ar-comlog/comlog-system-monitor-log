@@ -1,0 +1,15 @@
+{
+  "name": "comlog-system-monitor-log",
+  "version": "1.0.0",
+  "description": "",
+  "main": "comlog-system-monitor-log.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "COMLOG GmbH <bernhard.duenow@comlog.org> (http://www.comlog.org/)",
+  "license": "COMLOG GmbH",
+  "dependencies": {
+    "comlog-event-handler": "^1.0.2",
+    "tail": "^1.2.3"
+  }
+}
