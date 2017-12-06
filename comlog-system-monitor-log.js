@@ -6,6 +6,7 @@ function ComlogLogWatcher(options) {
 	var	_self = this;
 	this.status = null; // null = start, true = off, false = on
 	this.debug = false;
+	this.traceLog = false;
 	this.interval = 10000; // 10 Sekunden
 	this.lines = 1;
 
@@ -18,7 +19,7 @@ function ComlogLogWatcher(options) {
 	options.follow = options.follow || true;
 	if (_self.debug && !options.logger) options.logger = console;
 
-		if (options.match.substr(0, 1) != '/') options.match = '/'+options.match+'/';
+	if (options.match.substr(0, 1) != '/') options.match = '/'+options.match+'/';
 	var tmp = options.match.match(/(\/)(.*)(\/)(.*)/);
 	try {
 		options.match = new RegExp(tmp[2], tmp[4]);
@@ -50,6 +51,7 @@ function ComlogLogWatcher(options) {
 			_fw = new Tail(options.path(), options);
 			if (_self.debug) console.info("Starting Logfilter for '"+options.path()+"'");
 			_fw.on("line", function(data) {
+				if (_self.traceLog) console.log(data);
 
 				// down
 				if ((data+'').search(options.match) > -1) {
