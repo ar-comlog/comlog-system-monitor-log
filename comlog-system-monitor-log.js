@@ -14,7 +14,11 @@ function ComlogLogWatcher(options) {
 
 	if (!options) options = {};
 	options.match = options.match || '/ERROR/i';
-	if (options.match.substr(0, 1) != '/') options.match = '/'+options.match+'/';
+	options.encoding = options.encoding || 'utf-8';
+	options.follow = options.follow || true;
+	if (_self.debug && !options.logger) options.logger = console;
+
+		if (options.match.substr(0, 1) != '/') options.match = '/'+options.match+'/';
 	var tmp = options.match.match(/(\/)(.*)(\/)(.*)/);
 	try {
 		options.match = new RegExp(tmp[2], tmp[4]);
@@ -43,7 +47,7 @@ function ComlogLogWatcher(options) {
 		_running = true;
 
 		try {
-			_fw = new Tail(options.path());
+			_fw = new Tail(options.path(), options);
 			if (_self.debug) console.info("Starting Logfilter for '"+options.path()+"'");
 			_fw.on("line", function(data) {
 
