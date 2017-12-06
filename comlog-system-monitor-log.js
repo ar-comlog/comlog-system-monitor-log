@@ -6,7 +6,7 @@ function ComlogLogWatcher(options) {
 	var	_self = this;
 	this.status = null; // null = start, true = off, false = on
 	this.debug = false;
-	this.interval = 60000; // 1 Minute
+	this.interval = 6000; // 1 Minute
 	this.lines = 1;
 
 	// Private funktionen
@@ -22,55 +22,73 @@ function ComlogLogWatcher(options) {
 		if (this.debug) console.error(e.message);
 	}
 
-	// Extracting local options
 	for(var i in options) {
+		// Extracting local options
 		if (typeof this[i] != 'undefined') {
 			this[i] = options[i];
 			delete options[i];
 		}
 	}
 
+	// extract functions
+	if (options.path.search(/\s*function\s*\(/) > -1) {
+		options.path = eval("(" + options.path + ")");
+	} else {
+		var _path = options.path;
+		options.path = function () { return _path; };
+	}
+
 	function _watch() {
 		if (_running) return;
 		_running = true;
 
-		_fw = new Tail(options.path);
-		_fw.on("line", function(data) {
+		try {
+			_fw = new Tail(options.path());
+			_fw.on("line", function(data) {
 
-			// down
-			if ((data+'').search(options.match) > -1) {
-				if (_self.debug) console.warn("Logfilter found "+options.match);
+				// down
+				if ((data+'').search(options.match) > -1) {
+					if (_self.debug) console.warn("Logfilter '"+options.path()+"' found "+options.match);
+					if (_self.status === true) _self.emit('down');
+					_self.status = false;
+					_downCount = 0;
+				}
+				// up
+				else {
+					if (_self.status === false) {
+						_downCount++;
+						_self.status = _downCount > _self.lines;
+						if (_self.status) {
+							if (_self.debug) console.info("Logfilter '"+options.path()+"' check ok");
+							_self.emit('up');
+						} else {
+							if (_self.debug) console.info("Logfilter '"+options.path()+"' check no change");
+						}
+					} else {
+						_self.status = true;
+						if (_self.debug) console.info("Logfilter '"+options.path()+"' check ok");
+					}
+				}
+			});
+
+			_fw.on("error", function(err) {
+				if (_self.debug) console.error(err.stack || err);
+				_self.emit('error', [new Error("Error by watching \""+options.path()+"\"\n"+err.message)]);
 				if (_self.status === true) _self.emit('down');
 				_self.status = false;
-				_downCount = 0;
-			}
-			// up
-			else {
-				if (_self.status === false) {
-					_downCount++;
-					_self.status = _downCount > _self.lines;
-					if (_self.status) {
-						if (_self.debug) console.info("Logfilter check ok");
-						_self.emit('up');
-					} else {
-						if (_self.debug) console.info("Logfilter check nothing");
-					}
-				} else {
-					_self.status = true;
-					if (_self.debug) console.info("Logfilter check ok");
-				}
-			}
-		});
 
-		_fw.on("error", function(err) {
+				_running = false;
+				_timer = setTimeout(_watch, _self.interval);
+			});
+		} catch (err) {
 			if (_self.debug) console.error(err.stack || err);
-			_self.emit('error', [new Error("Connection to \""+options.user+'@'+options.host+"\" filed \n"+err.message)]);
+			_self.emit('error', [new Error("Error by watching \""+options.path()+"\"\n"+err.message)]);
 			if (_self.status === true) _self.emit('down');
 			_self.status = false;
 
 			_running = false;
 			_timer = setTimeout(_watch, _self.interval);
-		});
+		}
 	}
 
 	/**

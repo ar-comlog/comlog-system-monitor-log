@@ -11,6 +11,7 @@ var Service = require('comlog-system-monitor-log');
 
 var csmf = new Service({
 	path: '/path/to/file.log',
+	// OR path: function() { return '/path/to/file.log'; },
 	match: "/ERROR|WARN/i", // Optional (Default /ERROR/i)
 	lines: 10, // Optional (Default 1)
 });
