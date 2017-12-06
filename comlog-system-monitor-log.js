@@ -6,7 +6,7 @@ function ComlogLogWatcher(options) {
 	var	_self = this;
 	this.status = null; // null = start, true = off, false = on
 	this.debug = false;
-	this.interval = 6000; // 1 Minute
+	this.interval = 10000; // 10 Sekunden
 	this.lines = 1;
 
 	// Private funktionen
