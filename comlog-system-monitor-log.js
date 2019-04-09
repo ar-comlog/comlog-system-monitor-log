@@ -11,6 +11,8 @@ function ComlogLogWatcher(options) {
 	this.checkInterval = 10000
 	this.lines = 1;
 
+	this.logger = console;
+
 	// Private funktionen
 	var _running = false, _timer = null, _checkRunning = false, _fw, _downCount = 0;
 
@@ -26,7 +28,7 @@ function ComlogLogWatcher(options) {
 	try {
 		options.match = new RegExp(tmp[2], tmp[4]);
 	} catch (e) {
-		if (this.debug) console.error(e.message);
+		if (this.debug) _self.logger.error(e.message);
 	}
 
 	for(var i in options) {
@@ -63,13 +65,14 @@ function ComlogLogWatcher(options) {
 
 		try {
 			_fw = new Tail(options.activePath, options);
-			if (_self.debug) console.info("Starting Logfilter for '"+options.activePath+"'");
+			if (_self.debug) _self.logger.info("Starting Logfilter for '"+options.activePath+"'");
 			_fw.on("line", function(data) {
-				if (_self.traceLog) console.log(data);
+				debugger;
+				if (_self.traceLog) _self.logger.log(data);
 
 				// down
 				if ((data+'').search(options.match) > -1) {
-					if (_self.debug) console.warn("Logfilter '"+options.activePath+"' found "+options.match);
+					if (_self.debug) _self.logger.warn("Logfilter '"+options.activePath+"' found "+options.match);
 					if (_self.status === true) _self.emit('down');
 					_self.status = false;
 					_downCount = 0;
@@ -80,20 +83,20 @@ function ComlogLogWatcher(options) {
 						_downCount++;
 						_self.status = _downCount > _self.lines;
 						if (_self.status) {
-							if (_self.debug) console.info("Logfilter '"+options.activePath+"' check ok");
+							if (_self.debug) _self.logger.info("Logfilter '"+options.activePath+"' check ok");
 							_self.emit('up');
 						} else {
-							if (_self.debug) console.info("Logfilter '"+options.activePath+"' check no change");
+							if (_self.debug) _self.logger.info("Logfilter '"+options.activePath+"' check no change");
 						}
 					} else {
 						_self.status = true;
-						if (_self.debug) console.info("Logfilter '"+options.activePath+"' check ok");
+						if (_self.debug) _self.logger.info("Logfilter '"+options.activePath+"' check ok");
 					}
 				}
 			});
 
 			_fw.on("error", function(err) {
-				if (_self.debug) console.error(err.stack || err);
+				if (_self.debug) _self.logger.error(err.stack || err);
 				_self.emit('error', [new Error("Error by watching \""+options.activePath+"\"\n"+err.message)]);
 				if (_self.status === true) _self.emit('down');
 				_self.status = false;
@@ -102,7 +105,7 @@ function ComlogLogWatcher(options) {
 				_timer = setTimeout(_watch, _self.interval);
 			});
 		} catch (err) {
-			if (_self.debug) console.error(err.stack || err);
+			if (_self.debug) _self.logger.error(err.stack || err);
 			_self.emit('error', [new Error("Error by watching \""+options.activePath+"\"\n"+err.message)]);
 			if (_self.status === true) _self.emit('down');
 			_self.status = false;
@@ -113,7 +116,7 @@ function ComlogLogWatcher(options) {
 	}
 
 	function _check() {
-		if (_self.debug) console.info("Check logfilter '"+options.activePath+"'");
+		if (_self.debug) _self.logger.info("Check logfilter '"+options.activePath+"'");
 		var _cb = function(res) {
 			if (res === false) _self.restart();
 			else _checkTimer =  setTimeout(_check, _self.checkInterval);
@@ -123,7 +126,7 @@ function ComlogLogWatcher(options) {
 	}
 
 	this.restart = function () {
-		if (_self.debug) console.info("Restarting logfilter '"+options.activePath+"'");
+		if (_self.debug) _self.logger.info("Restarting logfilter '"+options.activePath+"'");
 		_self.stop();
 		_running = false;
 		_self.start();
@@ -142,9 +145,9 @@ function ComlogLogWatcher(options) {
 	 */
 	this.stop = function() {
 		debugger;
-		try { if (_timer !== null) clearTimeout(_timer);} catch (e) { console.warn(e.stack); }
-		try { if (_checkTimer !== null) clearTimeout(_checkTimer);} catch (e) {console.warn(e.stack);}
-		try { if (_fw) _fw.unwatch(); } catch (e) {console.warn(e.stack);}
+		try { if (_timer !== null) clearTimeout(_timer);} catch (e) { _self.logger.warn(e.stack); }
+		try { if (_checkTimer !== null) clearTimeout(_checkTimer);} catch (e) {_self.logger.warn(e.stack);}
+		try { if (_fw) _fw.unwatch(); } catch (e) {_self.logger.warn(e.stack);}
 	};
 
 	for(var i in options) this[i] = options[i];
