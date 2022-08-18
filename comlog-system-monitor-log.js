@@ -67,7 +67,6 @@ function ComlogLogWatcher(options) {
 			_fw = new Tail(options.activePath, options);
 			if (_self.debug) _self.logger.info("Starting Logfilter for '"+options.activePath+"'");
 			_fw.on("line", function(data) {
-				debugger;
 				if (_self.traceLog) _self.logger.log(data);
 
 				// down
@@ -104,6 +103,7 @@ function ComlogLogWatcher(options) {
 				_running = false;
 				_timer = setTimeout(_watch, _self.interval);
 			});
+			_self.status = true;
 		} catch (err) {
 			if (_self.debug) _self.logger.error(err.stack || err);
 			_self.emit('error', [new Error("Error by watching \""+options.activePath+"\"\n"+err.message)]);
@@ -144,7 +144,6 @@ function ComlogLogWatcher(options) {
 	 * Überwachung stoppen
 	 */
 	this.stop = function() {
-		debugger;
 		try { if (_timer !== null) clearTimeout(_timer);} catch (e) { _self.logger.warn(e.stack); }
 		try { if (_checkTimer !== null) clearTimeout(_checkTimer);} catch (e) {_self.logger.warn(e.stack);}
 		try { if (_fw) _fw.unwatch(); } catch (e) {_self.logger.warn(e.stack);}
